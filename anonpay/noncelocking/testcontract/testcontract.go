@@ -192,6 +192,22 @@ func RunConsumingTests(t *testing.T, setup fullSetupFunc) {
 		requireInputError(t, err)
 	})
 
+	t.Run("fail, invalid ticket", func(t *testing.T) {
+		locker, _ := setup(t)
+
+		nonce, err := anonpay.RandomNonce()
+		require.NoError(t, err)
+
+		_, err = locker.LockNonce(t.Context(), nonce)
+		require.NoError(t, err)
+
+		err = locker.ConsumeNonce(t.Context(), nonce, "invalid ticket")
+		require.Error(t, err)
+
+		err = locker.ReleaseNonce(t.Context(), nonce, "invalid ticket")
+		require.Error(t, err)
+	})
+
 	t.Run("fail, released", func(t *testing.T) {
 		locker, _ := setup(t)
 
