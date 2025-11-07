@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/url"
 	"sync"
@@ -43,6 +44,8 @@ type CheckerConfig struct {
 	Interval time.Duration `yaml:"interval"`
 	// RequestTimeout is the amount of time to wait for a check to complete
 	RequestTimeout time.Duration `yaml:"request_timeout"`
+	// DialTimeout is the amount of time to wait when connecting to the compute node
+	DialTimeout time.Duration `yaml:"dial_timeout"`
 	// Retries is the number of requests made before a healthcheck is considered a failure.
 	Retries int `yaml:"retries"`
 	// MaxAge determines after which age old local healthchecks are deleted.
@@ -53,6 +56,7 @@ func DefaultCheckerConfig() *CheckerConfig {
 	return &CheckerConfig{
 		Interval:       30 * time.Second,
 		RequestTimeout: 5 * time.Second,
+		DialTimeout:    5 * time.Second,
 		Retries:        3,
 		MaxAge:         15 * time.Minute,
 	}
@@ -81,12 +85,18 @@ func NewChecker(ctx context.Context, cfg *CheckerConfig, s Store) *Checker {
 	}
 
 	localCtx, cancel := context.WithCancel(ctx)
+
+	dialer := &net.Dialer{
+		Timeout: cfg.DialTimeout,
+	}
 	return &Checker{
 		timeBetween: cfg.Interval,
 		retries:     retries,
 		httpClient: &http.Client{
-			Timeout:   cfg.RequestTimeout,
-			Transport: otelutil.NewTransport(http.DefaultTransport),
+			Timeout: cfg.RequestTimeout,
+			Transport: otelutil.NewTransport(&http.Transport{
+				DialContext: dialer.DialContext,
+			}),
 		},
 		maxAge: cfg.MaxAge,
 		store:  s,
@@ -104,7 +114,9 @@ func (c *Checker) Run() error {
 		case <-c.ctx.Done():
 			return nil
 		case <-ticker.C:
-			c.runHealthChecks(c.ctx)
+			// Run healthchecks in a separate goroutine to avoid blocking the ticker.
+			// Note that our configured timeouts should prevent overlapping healthchecks.
+			go c.runHealthChecks(c.ctx)
 		}
 	}
 }
@@ -130,8 +142,13 @@ func (c *Checker) runHealthChecks(ctx context.Context) {
 		})
 	}
 	wg.Wait()
+
+	slog.Info("healthchecks completed", "checked_nodes", len(targets), "total_nodes", nodeCount)
 }
 
+// CheckHealth performs a healthcheck against the given target.
+// Note that this function will only return errors if constructing individual request fails.
+// If a given healthcheck fails, the returned Check will contain the error itself (hence why we log before returning).
 func (c *Checker) CheckHealth(ctx context.Context, nodeID uuid.UUID, tgtURL url.URL) (Check, error) {
 	hc := Check{
 		NodeID: nodeID,
@@ -165,6 +182,16 @@ func (c *Checker) CheckHealth(ctx context.Context, nodeID uuid.UUID, tgtURL url.
 			return hc, nil
 		}
 	}
+
+	// Log the final failure after all retries exhausted
+	slog.Warn("healthcheck failed after all retries",
+		"node_id", nodeID,
+		"url", tgtURL.String(),
+		"retries", c.retries,
+		"final_status", hc.HTTPStatusCode,
+		"error", hc.ErrorMessage,
+		"latency", hc.Latency,
+	)
 
 	return hc, nil
 }
