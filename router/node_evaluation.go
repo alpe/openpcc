@@ -47,6 +47,7 @@ func GradedNodeEvaluator(g *health.Grader, interval time.Duration) NodeEvaluatio
 			// drop nodes for which we haven't received a heartbeat in a while.
 			cutoff := time.Now().Add(-g.MaxAge())
 			if a.LastEventTimestamp.Before(cutoff) {
+				slog.Info("agent has not sent a heartbeat in a while, removing from router", "agent", a, "max_age", g.MaxAge())
 				return nil, nil
 			}
 		}
@@ -61,6 +62,7 @@ func GradedNodeEvaluator(g *health.Grader, interval time.Duration) NodeEvaluatio
 		}
 
 		status := g.Grade(history)
+		slog.Info("graded node", "node_url", a.RoutingInfo.URL, "node_tags", a.RoutingInfo.Tags, "status", status)
 		switch status {
 		case health.StatusOK:
 			// healthy, route to the node if we have the routing info and schedule the next evaluation.
