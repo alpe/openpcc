@@ -16,11 +16,13 @@ package router
 
 import (
 	"log/slog"
+	"net/url"
 	"time"
 
 	"github.com/openpcc/openpcc/router/agent"
 	"github.com/openpcc/openpcc/router/health"
 	"github.com/openpcc/openpcc/router/state"
+	"github.com/openpcc/openpcc/tags"
 )
 
 type NodeEvaluationFunc func(a *state.Agent, nh *state.NodeHealth) (*agent.RoutingInfo, *time.Duration)
@@ -62,7 +64,14 @@ func GradedNodeEvaluator(g *health.Grader, interval time.Duration) NodeEvaluatio
 		}
 
 		status := g.Grade(history)
-		slog.Info("graded node", "node_url", a.RoutingInfo.URL, "node_tags", a.RoutingInfo.Tags, "status", status)
+		routingInfo := a.RoutingInfo
+		var nodeUrl url.URL
+		var nodeTags tags.Tags
+		if routingInfo != nil {
+			nodeUrl = routingInfo.URL
+			nodeTags = routingInfo.Tags
+		}
+		slog.Info("graded node", "node_url", nodeUrl, "node_tags", nodeTags, "status", status)
 		switch status {
 		case health.StatusOK:
 			// healthy, route to the node if we have the routing info and schedule the next evaluation.
