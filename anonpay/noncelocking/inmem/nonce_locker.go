@@ -112,7 +112,7 @@ func (l *NonceLocker) ConsumeNonce(ctx context.Context, nonce anonpay.Nonce, tic
 
 	key := hex.EncodeToString(nonce.Nonce)
 	sn, ok := l.nonces[key]
-	if !ok {
+	if !ok || sn.ticket != ticket {
 		return fmt.Errorf("no lock found for ticket: %s", ticket)
 	}
 
@@ -140,7 +140,7 @@ func (l *NonceLocker) ReleaseNonce(ctx context.Context, nonce anonpay.Nonce, tic
 
 	key := hex.EncodeToString(nonce.Nonce)
 	sn, ok := l.nonces[key]
-	if !ok {
+	if !ok || sn.ticket != ticket {
 		return fmt.Errorf("no lock found for ticket: %s", ticket)
 	}
 
