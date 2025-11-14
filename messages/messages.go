@@ -34,7 +34,7 @@ const (
 )
 
 const (
-	UserChunkLen = 128
+	UserChunkLen = 512
 )
 
 var (

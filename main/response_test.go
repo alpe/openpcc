@@ -185,8 +185,8 @@ func TestResponse(t *testing.T) {
 				break
 			}
 
-			// Each chunk should be <= 128 bytes and > 0 bytes
-			require.LessOrEqual(t, len(chunk), 128)
+			// Each chunk should be <= 512 bytes and > 0 bytes
+			require.LessOrEqual(t, len(chunk), 512)
 			require.Greater(t, len(chunk), 0)
 			receivedData = append(receivedData, chunk...)
 		}
