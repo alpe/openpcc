@@ -24,8 +24,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/confidentsecurity/ohttp"
-	obhttp "github.com/confidentsecurity/ohttp/encoding/bhttp"
+	"github.com/openpcc/ohttp"
+	obhttp "github.com/openpcc/ohttp/encoding/bhttp"
 	"github.com/openpcc/openpcc/chunk"
 	"github.com/openpcc/openpcc/httpfmt"
 	"github.com/openpcc/openpcc/messages"

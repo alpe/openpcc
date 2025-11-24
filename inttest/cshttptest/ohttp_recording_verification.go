@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/cloudflare/circl/hpke"
-	"github.com/confidentsecurity/twoway"
 	"github.com/openpcc/openpcc/messages"
+	"github.com/openpcc/twoway"
 	"github.com/quic-go/quic-go/quicvarint"
 	"github.com/stretchr/testify/require"
 )

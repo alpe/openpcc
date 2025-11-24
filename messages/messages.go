@@ -21,8 +21,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/confidentsecurity/bhttp"
-	"github.com/confidentsecurity/twoway"
+	"github.com/openpcc/bhttp"
+	"github.com/openpcc/twoway"
 	"github.com/quic-go/quic-go/quicvarint"
 )
 

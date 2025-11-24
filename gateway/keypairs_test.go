@@ -21,10 +21,10 @@ import (
 	"time"
 
 	"github.com/cloudflare/circl/hpke"
-	"github.com/confidentsecurity/ohttp"
-	"github.com/confidentsecurity/twoway"
+	"github.com/openpcc/ohttp"
 	"github.com/openpcc/openpcc/gateway"
 	"github.com/openpcc/openpcc/keyrotation"
+	"github.com/openpcc/twoway"
 	"github.com/stretchr/testify/require"
 )
 

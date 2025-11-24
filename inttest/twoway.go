@@ -19,8 +19,8 @@ import (
 	"testing"
 
 	"github.com/cloudflare/circl/hpke"
-	"github.com/confidentsecurity/twoway"
 	ev "github.com/openpcc/openpcc/attestation/evidence"
+	"github.com/openpcc/twoway"
 	"github.com/stretchr/testify/require"
 )
 

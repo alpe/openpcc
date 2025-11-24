@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/confidentsecurity/ohttp"
+	"github.com/openpcc/ohttp"
 	"github.com/openpcc/openpcc/auth/client"
 	"github.com/openpcc/openpcc/gateway"
 	"github.com/openpcc/openpcc/gen/protos"

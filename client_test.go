@@ -27,7 +27,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/confidentsecurity/twoway"
 	"github.com/google/uuid"
 	"github.com/openpcc/openpcc"
 	"github.com/openpcc/openpcc/ahttp"
@@ -43,6 +42,7 @@ import (
 	routerapi "github.com/openpcc/openpcc/router/api"
 	"github.com/openpcc/openpcc/tags"
 	ctest "github.com/openpcc/openpcc/test"
+	"github.com/openpcc/twoway"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"

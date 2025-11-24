@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/confidentsecurity/ohttp"
+	"github.com/openpcc/ohttp"
 	"github.com/openpcc/openpcc/gateway"
 	"github.com/openpcc/openpcc/transparency"
 )

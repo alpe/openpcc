@@ -30,7 +30,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confidentsecurity/twoway"
 	"github.com/openpcc/openpcc"
 	"github.com/openpcc/openpcc/anonpay/wallet"
 	"github.com/openpcc/openpcc/httpfmt"
@@ -40,6 +39,7 @@ import (
 	routerapi "github.com/openpcc/openpcc/router/api"
 	"github.com/openpcc/openpcc/tags"
 	ctest "github.com/openpcc/openpcc/test"
+	"github.com/openpcc/twoway"
 )
 
 const (

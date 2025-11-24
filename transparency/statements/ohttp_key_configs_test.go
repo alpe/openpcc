@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/cloudflare/circl/hpke"
-	"github.com/confidentsecurity/ohttp"
+	"github.com/openpcc/ohttp"
 	"github.com/openpcc/openpcc/gateway"
 	"github.com/openpcc/openpcc/keyrotation"
 	"github.com/openpcc/openpcc/transparency"

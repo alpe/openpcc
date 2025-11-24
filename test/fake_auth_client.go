@@ -18,7 +18,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/confidentsecurity/ohttp"
+	"github.com/openpcc/ohttp"
 	"github.com/openpcc/openpcc/anonpay"
 	authclient "github.com/openpcc/openpcc/auth/client"
 	"github.com/openpcc/openpcc/auth/credentialing"

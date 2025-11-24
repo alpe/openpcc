@@ -27,7 +27,7 @@ import (
 
 	"github.com/MicahParks/jwkset"
 	"github.com/cenkalti/backoff/v4"
-	"github.com/confidentsecurity/ohttp"
+	"github.com/openpcc/ohttp"
 	"github.com/openpcc/openpcc/anonpay"
 	"github.com/openpcc/openpcc/gateway"
 	"github.com/openpcc/openpcc/gen/protos"

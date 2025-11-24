@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/cloudflare/circl/hpke"
-	obhttp "github.com/confidentsecurity/ohttp/encoding/bhttp"
+	obhttp "github.com/openpcc/ohttp/encoding/bhttp"
 	"github.com/openpcc/openpcc/ahttp"
 	"github.com/openpcc/openpcc/anonpay"
 	"github.com/openpcc/openpcc/anonpay/banking/httpapi"
@@ -45,15 +45,15 @@ import (
 	"github.com/openpcc/openpcc/tags"
 	"github.com/openpcc/openpcc/transparency"
 
-	"github.com/confidentsecurity/ohttp"
-	"github.com/confidentsecurity/twoway"
 	"github.com/google/uuid"
+	"github.com/openpcc/ohttp"
 	"github.com/openpcc/openpcc/gen/protos"
 	"github.com/openpcc/openpcc/httpfmt"
 	"github.com/openpcc/openpcc/messages"
 	"github.com/openpcc/openpcc/models"
 	"github.com/openpcc/openpcc/otel/otelutil"
 	"github.com/openpcc/openpcc/uuidv7"
+	"github.com/openpcc/twoway"
 	"go.opentelemetry.io/otel/codes"
 	"google.golang.org/protobuf/proto"
 )

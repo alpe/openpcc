@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/confidentsecurity/twoway"
 	"github.com/openpcc/openpcc/attestation/evidence"
 	"github.com/openpcc/openpcc/router/api"
+	"github.com/openpcc/twoway"
 )
 
 // VerifiedNode is a compute node for which the attestation has been

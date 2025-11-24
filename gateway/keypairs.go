@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/cloudflare/circl/hpke"
-	"github.com/confidentsecurity/ohttp"
-	"github.com/confidentsecurity/twoway"
+	"github.com/openpcc/ohttp"
 	"github.com/openpcc/openpcc/keyrotation"
+	"github.com/openpcc/twoway"
 )
 
 var Suite = hpke.NewSuite(hpke.KEM_X25519_KYBER768_DRAFT00, hpke.KDF_HKDF_SHA256, hpke.AEAD_AES128GCM)
