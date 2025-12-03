@@ -1121,6 +1121,7 @@ func (b0 TDXCollateral_builder) Build() *TDXCollateral {
 	return m0
 }
 
+// https://learn.microsoft.com/en-us/azure/confidential-computing/guest-attestation-confidential-virtual-machines-design#runtime-claims
 type AzureCVMRuntimeData struct {
 	state                    protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Keys          *[]*AzureCVMKey        `protobuf:"bytes,1,rep,name=keys"`
