@@ -83,6 +83,7 @@ const (
 	SevSnpExtendedReport
 	AkTPMTPublic
 	AzureRuntimeData
+	TeeTickstamp
 )
 
 func (s EvidenceType) String() string {
@@ -123,6 +124,8 @@ func (s EvidenceType) String() string {
 		return "AkTPMTPublic"
 	case AzureRuntimeData:
 		return "AzureRuntimeData"
+	case TeeTickstamp:
+		return "TeeTickstamp"
 	case EvidenceTypeUnspecified:
 		// for completeness, we must include unspecified. revive:useless-fallthrough triggers if there is no comment
 		fallthrough
@@ -177,6 +180,8 @@ func (s EvidenceType) MarshalProto() pb.EvidenceType {
 		return pb.EvidenceType_EVIDENCE_TYPE_AK_TPMT_PUBLIC
 	case AzureRuntimeData:
 		return pb.EvidenceType_EVIDENCE_TYPE_AZURE_CVM_RUNTIME_DATA
+	case TeeTickstamp:
+		return pb.EvidenceType_EVIDENCE_TYPE_TEE_TICKSTAMP
 	case EvidenceTypeUnspecified:
 		// for completeness, we must include unspecified. revive:useless-fallthrough triggers if there is no comment
 		fallthrough
@@ -223,6 +228,8 @@ func (s *EvidenceType) UnmarshalProto(pbt pb.EvidenceType) error {
 		*s = AkTPMTPublic
 	case pb.EvidenceType_EVIDENCE_TYPE_AZURE_CVM_RUNTIME_DATA:
 		*s = AzureRuntimeData
+	case pb.EvidenceType_EVIDENCE_TYPE_TEE_TICKSTAMP:
+		*s = TeeTickstamp
 	case pb.EvidenceType_EVIDENCE_TYPE_UNSPECIFIED:
 		// for completeness, we must include unspecified. revive:useless-fallthrough triggers if there is no comment
 		fallthrough

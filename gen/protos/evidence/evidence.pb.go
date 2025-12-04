@@ -59,6 +59,7 @@ const (
 	EvidenceType_EVIDENCE_TYPE_SEVSNP_EXTENDED_REPORT                 EvidenceType = 16
 	EvidenceType_EVIDENCE_TYPE_AK_TPMT_PUBLIC                         EvidenceType = 17
 	EvidenceType_EVIDENCE_TYPE_AZURE_CVM_RUNTIME_DATA                 EvidenceType = 18
+	EvidenceType_EVIDENCE_TYPE_TEE_TICKSTAMP                          EvidenceType = 19
 )
 
 // Enum value maps for EvidenceType.
@@ -83,6 +84,7 @@ var (
 		16: "EVIDENCE_TYPE_SEVSNP_EXTENDED_REPORT",
 		17: "EVIDENCE_TYPE_AK_TPMT_PUBLIC",
 		18: "EVIDENCE_TYPE_AZURE_CVM_RUNTIME_DATA",
+		19: "EVIDENCE_TYPE_TEE_TICKSTAMP",
 	}
 	EvidenceType_value = map[string]int32{
 		"EVIDENCE_TYPE_UNSPECIFIED":                            0,
@@ -104,6 +106,7 @@ var (
 		"EVIDENCE_TYPE_SEVSNP_EXTENDED_REPORT":                 16,
 		"EVIDENCE_TYPE_AK_TPMT_PUBLIC":                         17,
 		"EVIDENCE_TYPE_AZURE_CVM_RUNTIME_DATA":                 18,
+		"EVIDENCE_TYPE_TEE_TICKSTAMP":                          19,
 	}
 )
 
@@ -1793,7 +1796,7 @@ const file_evidence_proto_rawDesc = "" +
 	"tpmEnabled\x12#\n" +
 	"\rtpm_persisted\x18\x05 \x01(\bR\ftpmPersisted\x12 \n" +
 	"\fvm_unique_id\x18\x06 \x01(\tR\n" +
-	"vmUniqueId*\xe3\x05\n" +
+	"vmUniqueId*\x84\x06\n" +
 	"\fEvidenceType\x12\x1d\n" +
 	"\x19EVIDENCE_TYPE_UNSPECIFIED\x10\x00\x12*\n" +
 	"&EVIDENCE_TYPE_TPM_CERTIFY_REK_CREATION\x10\x01\x12$\n" +
@@ -1814,7 +1817,8 @@ const file_evidence_proto_rawDesc = "" +
 	"4EVIDENCE_TYPE_NVIDIA_SWITCH_INTERMEDIATE_CERTIFICATE\x10\x0f\x12(\n" +
 	"$EVIDENCE_TYPE_SEVSNP_EXTENDED_REPORT\x10\x10\x12 \n" +
 	"\x1cEVIDENCE_TYPE_AK_TPMT_PUBLIC\x10\x11\x12(\n" +
-	"$EVIDENCE_TYPE_AZURE_CVM_RUNTIME_DATA\x10\x12B8Z.github.com/openpcc/openpcc/gen/protos/evidence\x92\x03\x05\xd2>\x02\x10\x03b\beditionsp\xe8\a"
+	"$EVIDENCE_TYPE_AZURE_CVM_RUNTIME_DATA\x10\x12\x12\x1f\n" +
+	"\x1bEVIDENCE_TYPE_TEE_TICKSTAMP\x10\x13B8Z.github.com/openpcc/openpcc/gen/protos/evidence\x92\x03\x05\xd2>\x02\x10\x03b\beditionsp\xe8\a"
 
 var file_evidence_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_evidence_proto_msgTypes = make([]protoimpl.MessageInfo, 11)

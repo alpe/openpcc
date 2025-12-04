@@ -805,3 +805,51 @@ func PCRRead(tpm transport.TPM, pcrs []uint) (map[uint32][]byte, error) {
 
 	return pcrValues, nil
 }
+
+// This function calls the TPM2_GetTime command
+// (see section 18.7 of https://trustedcomputinggroup.org/wp-content/uploads/TPM-Rev-2.0-Part-3-Commands-01.38.pdf)
+// It will return a TPM structure that contains both a signature over arbitrary data and TPM clock information.
+// The TPM clock is not synchronized to the system clock, so we call this a "tickstamp" instead of a "timestamp".
+// This TPM2_GetTime command returns a TPMT_SIGNATURE object that includes a signature over both the arbitrary data
+// and the clock information. This signature thus cryptographically links `data` to a certain tick index of a particular TPM.
+func TickstampData(tpm transport.TPM,
+	signingKeyHandle tpm2.TPMHandle,
+	data []byte) (*tpm2.GetTimeResponse, error) {
+	signingKeyReadPublicRequest := tpm2.ReadPublic{
+		ObjectHandle: signingKeyHandle,
+	}
+
+	readResponse, err := signingKeyReadPublicRequest.Execute(tpm)
+
+	if err != nil {
+		return nil, err
+	}
+
+	getTimeCommand := tpm2.GetTime{
+		PrivacyAdminHandle: tpm2.TPMRHEndorsement,
+		SignHandle: tpm2.NamedHandle{
+			Handle: signingKeyHandle,
+			Name:   readResponse.Name,
+		},
+		QualifyingData: tpm2.TPM2BData{
+			Buffer: data,
+		},
+		InScheme: tpm2.TPMTSigScheme{
+			Scheme: tpm2.TPMAlgRSASSA,
+			Details: tpm2.NewTPMUSigScheme(
+				tpm2.TPMAlgRSASSA,
+				&tpm2.TPMSSchemeHash{
+					HashAlg: tpm2.TPMAlgSHA256,
+				},
+			),
+		},
+	}
+
+	getTimeCommandResponse, err := getTimeCommand.Execute(tpm)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return getTimeCommandResponse, nil
+}
