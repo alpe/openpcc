@@ -26,6 +26,10 @@ import (
 )
 
 func TestGetIntermediateCert(t *testing.T) {
+	// TODO: remove once we can figure out how to fetch a fresh nvidia cert each time we run the test,
+	// so that we don't see a `x509: certificate has expired or is not yet valid` error.
+	// https://linear.app/confident/issue/CS-1289/re-enable-nvidia-intermediate-certificate-test-in-openpccattest
+	t.Skip("skipping until we can fetch a fresh nvidia cert each time we run the test to avoid certificate expired errors...")
 	testFS := test.TextArchiveFS(t, "./testdata/nvidia_certificates.txt")
 	testIntermediateAKCert := test.ReadFile(t, testFS, "test_nvidia_cert.pem")
 	t.Run("success", func(t *testing.T) {

@@ -2,12 +2,6 @@ module github.com/openpcc/openpcc
 
 go 1.25.4
 
-replace (
-	github.com/openpcc/bhttp => ../bhttp
-	github.com/openpcc/ohttp => ../ohttp
-	github.com/openpcc/twoway => ../twoway
-)
-
 require (
 	github.com/MicahParks/jwkset v0.11.0
 	github.com/allaboutapps/integresql-client-go v1.0.0
@@ -38,9 +32,9 @@ require (
 	github.com/magefile/mage v1.15.0
 	github.com/neilotoole/slogt v1.1.0
 	github.com/openai/openai-go/v3 v3.8.1
-	github.com/openpcc/bhttp v0.0.0-00010101000000-000000000000
-	github.com/openpcc/ohttp v0.0.0-00010101000000-000000000000
-	github.com/openpcc/twoway v0.0.0-00010101000000-000000000000
+	github.com/openpcc/bhttp v0.0.77
+	github.com/openpcc/ohttp v0.0.77
+	github.com/openpcc/twoway v0.0.77
 	github.com/pkg/errors v0.9.1
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/quic-go/quic-go v0.57.1
