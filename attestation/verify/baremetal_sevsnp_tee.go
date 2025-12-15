@@ -36,9 +36,9 @@ func BareMetalSEVSNPReport(
 	signedEvidencePiece *evidence.SignedEvidencePiece,
 	checkRevocations bool,
 	getter trust.HTTPSGetter,
+	snpNonce []byte,
 ) error {
 	attestation := &spb.Attestation{}
-	var snpNonce = make([]byte, sabi.ReportDataSize)
 	copy(snpNonce, signedEvidencePiece.Data[:sabi.ReportDataSize])
 
 	var attestationBytes = make([]byte, len(signedEvidencePiece.Data)-sabi.ReportDataSize)

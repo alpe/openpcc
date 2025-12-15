@@ -64,12 +64,10 @@ func (*AzureSEVSNPTEEAttestor) Name() string {
 }
 
 func (a *AzureSEVSNPTEEAttestor) CreateSignedEvidence(ctx context.Context) (*evidence.SignedEvidencePiece, error) {
-	emptyNonce := make([]byte, sabi.ReportDataSize)
-
 	err := cstpm.WriteToNVRamNoAuth(
 		a.tpm,
 		tpmutil.Handle(AzureTDReportWriteNVIndex),
-		emptyNonce)
+		a.Nonce)
 
 	if err != nil {
 		return nil, fmt.Errorf(

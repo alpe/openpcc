@@ -14,6 +14,7 @@
 package attest_test
 
 import (
+	"bytes"
 	_ "embed"
 	"encoding/pem"
 	"testing"
@@ -56,12 +57,18 @@ func Test_AzureCVMRuntimeData_Success(t *testing.T) {
 	)
 	se, err := attestor.CreateSignedEvidence(t.Context())
 
+	runtimeData := &evidence.AzureCVMRuntimeData{}
+	runtimeData.UnmarshalBinary(se.Data)
+
 	require.NoError(t, err)
 	require.NotNil(t, se)
 
-	err = verify.AzureCVMRuntimeData(t.Context(), se)
-
-	require.NoError(t, err)
+	expectedNonce, err := verify.AzureCVMRuntimeData(t.Context(), se)
+	observedNoncePadded, err := evidence.PadByteArrayTo64(runtimeData.Signature[:])
+	require.Equal(t,
+		observedNoncePadded,
+		expectedNonce,
+	)
 }
 
 func Test_AzureCVMRuntimeData_FailureSignatureMismatch(t *testing.T) {
@@ -108,7 +115,93 @@ func Test_AzureCVMRuntimeData_FailureSignatureMismatch(t *testing.T) {
 
 	se.Data = newBytes
 
-	err = verify.AzureCVMRuntimeData(t.Context(), se)
+	_, err = verify.AzureCVMRuntimeData(t.Context(), se)
 
 	require.ErrorContains(t, err, "struct does not match its original json")
+}
+
+func Test_ExtractJSONObjectWithTrailingHeadingBytes(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     []byte
+		want      []byte
+		expectErr bool
+	}{
+		{
+			name:      "Standard extraction with binary noise",
+			input:     []byte{0x00, 0x01, '{', '"', 'k', '"', ':', '1', '}', 0xFF, 0xFE},
+			want:      []byte(`{"k":1}`),
+			expectErr: false,
+		},
+		{
+			name:      "Clean JSON without noise",
+			input:     []byte(`{"foo":"bar"}`),
+			want:      []byte(`{"foo":"bar"}`),
+			expectErr: false,
+		},
+		{
+			name:      "Nested JSON objects",
+			input:     []byte(`prefix{"parent":{"child":"value"}}suffix`),
+			want:      []byte(`{"parent":{"child":"value"}}`),
+			expectErr: false,
+		},
+		{
+			name: "Multiple JSON objects",
+			// Note: The function logic captures from the *first* { to the *last* }.
+			// This test confirms that greedy behavior, even if the result isn't valid single-root JSON.
+			input:     []byte(`noise{"obj1":1} garbage {"obj2":2}noise`),
+			want:      []byte(`{"obj1":1} garbage {"obj2":2}`),
+			expectErr: false,
+		},
+		{
+			name:      "No opening brace",
+			input:     []byte(`json content without open brace}`),
+			want:      nil,
+			expectErr: true,
+		},
+		{
+			name:      "No closing brace",
+			input:     []byte(`{json content without close brace`),
+			want:      nil,
+			expectErr: true,
+		},
+		{
+			name:      "No braces at all",
+			input:     []byte(`just random text`),
+			want:      nil,
+			expectErr: true,
+		},
+		{
+			name:      "Braces in wrong order (closing before opening)",
+			input:     []byte(`junk} middle {junk`),
+			want:      nil,
+			expectErr: true,
+		},
+		{
+			name:      "Empty input",
+			input:     []byte{},
+			want:      nil,
+			expectErr: true,
+		},
+		{
+			name:      "Only braces",
+			input:     []byte(`{}`),
+			want:      []byte(`{}`),
+			expectErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := attest.ExtractJSONObjectWithTrailingHeadingBytes(tt.input)
+			if (err != nil) != tt.expectErr {
+				t.Errorf("extractJSONObject() error = %v, expectErr %v", err, tt.expectErr)
+				return
+			}
+
+			if !bytes.Equal(got, tt.want) {
+				t.Errorf("extractJSONObject() got = %s, want %s", got, tt.want)
+			}
+		})
+	}
 }

@@ -68,6 +68,7 @@ func Test_AzureTDXAttestor_Success(t *testing.T) {
 
 	attestor := attest.NewAzureTDXTEEAttestorWithQuoteService(
 		mocktpm,
+		// Nonce does not matter since we are mocking out the QuoteService
 		make([]byte, 64),
 		&FakeMetadataQuoteService{
 			Quote: tdxQuoteBytes.Bytes,
@@ -107,7 +108,15 @@ func Test_AzureTDXAttestor_Success(t *testing.T) {
 
 	tdxCollateral.UnmarshalBinary(collateralEvidencePiece.Data)
 
-	err = verify.TDXReport(t.Context(), root, *tdxCollateral, se)
+	runtimeData, err := attest.ParseAzureCVMRuntimeDataFromReport(tdxReportBytes.Bytes)
+
+	require.NoError(t, err)
+
+	nonceExpected, err := evidence.PadByteArrayTo64(runtimeData.Signature[:])
+
+	require.NoError(t, err)
+
+	err = verify.TDXReport(t.Context(), root, *tdxCollateral, se, nonceExpected)
 
 	require.NoError(t, err)
 }

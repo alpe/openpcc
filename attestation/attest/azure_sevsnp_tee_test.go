@@ -23,6 +23,7 @@ import (
 
 	"github.com/google/go-tpm/tpm2/transport/simulator"
 	"github.com/openpcc/openpcc/attestation/attest"
+	"github.com/openpcc/openpcc/attestation/evidence"
 	"github.com/openpcc/openpcc/attestation/verify"
 	test "github.com/openpcc/openpcc/inttest"
 )
@@ -85,6 +86,14 @@ func Test_AzureSEVSNPTEEAttestor_Success(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, se)
 
-	err = verify.SEVSNPReport(t.Context(), se, true, getter)
+	runtimeData, err := attest.ParseAzureCVMRuntimeDataFromReport(block.Bytes)
+
+	require.NoError(t, err)
+
+	nonceExpected, err := evidence.PadByteArrayTo64(runtimeData.Signature[:])
+
+	require.NoError(t, err)
+
+	err = verify.SEVSNPReport(t.Context(), se, true, getter, nonceExpected)
 	require.NoError(t, err)
 }

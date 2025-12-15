@@ -25,37 +25,44 @@ import (
 	"github.com/openpcc/openpcc/attestation/evidence"
 )
 
+// Validate the azure CVM runtime data and return the expected nonce for the TEE report
 func AzureCVMRuntimeData(
 	ctx context.Context,
 	signedEvidencePiece *evidence.SignedEvidencePiece,
-) error {
+) ([]byte, error) {
 	runtimeData := &evidence.AzureCVMRuntimeData{}
 	err := runtimeData.UnmarshalBinary(signedEvidencePiece.Data)
 
 	if err != nil {
-		return fmt.Errorf("failed to parse runtime data (%v): %w", signedEvidencePiece.Data, err)
+		return nil, fmt.Errorf("failed to parse runtime data (%v): %w", signedEvidencePiece.Data, err)
 	}
 
 	runtimeDataInJson := &evidence.AzureCVMRuntimeData{}
 	err = runtimeDataInJson.UnmarshalJSON(runtimeData.OriginalJSON)
 
 	if err != nil {
-		return fmt.Errorf("failed to parse runtime data from original json (%v): %w", runtimeData.OriginalJSON, err)
+		return nil, fmt.Errorf("failed to parse runtime data from original json (%v): %w", runtimeData.OriginalJSON, err)
 	}
 
 	if !reflect.DeepEqual(runtimeData, runtimeDataInJson) {
-		return errors.New("struct does not match its original json: " + cmp.Diff(runtimeData, runtimeDataInJson))
+		return nil, errors.New("struct does not match its original json: " + cmp.Diff(runtimeData, runtimeDataInJson))
 	}
 
 	originalJsonHash := sha256.Sum256(runtimeData.OriginalJSON)
 
 	if !bytes.Equal(originalJsonHash[:], runtimeData.Signature[:]) {
-		return errors.New("signatures do not match")
+		return nil, errors.New("signatures do not match")
 	}
 
 	if !bytes.Equal(originalJsonHash[:], signedEvidencePiece.Signature) {
-		return errors.New("signatures do not match")
+		return nil, errors.New("signatures do not match")
 	}
 
-	return nil
+	expectedNoncePadded, err := evidence.PadByteArrayTo64(runtimeData.Signature[:])
+
+	if err != nil {
+		return nil, fmt.Errorf("nonce too long: %x", runtimeData.Signature[:])
+	}
+
+	return expectedNoncePadded, nil
 }

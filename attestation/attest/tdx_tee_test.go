@@ -74,7 +74,7 @@ func Test_VerifyTDXReport_Success(t *testing.T) {
 			Signature: make([]byte, 64),
 		}
 
-		err = verify.TDXReport(t.Context(), root, *tdxCollateral, evidencePiece)
+		err = verify.TDXReport(t.Context(), root, *tdxCollateral, evidencePiece, make([]byte, 64))
 		require.NoError(t, err)
 	})
 
@@ -88,7 +88,7 @@ func Test_VerifyTDXReport_Success(t *testing.T) {
 			Data:      pemReportToBytes(testGceTDXReportPEM),
 			Signature: make([]byte, 64),
 		}
-		err = verify.TDXReport(t.Context(), root, *tdxCollateral, evidencePiece)
+		err = verify.TDXReport(t.Context(), root, *tdxCollateral, evidencePiece, make([]byte, 64))
 		require.ErrorContains(t, err, "certificate signed by unknown authority")
 	})
 
@@ -136,7 +136,7 @@ func Test_VerifyTDXReport_Success(t *testing.T) {
 
 		collateral.UnmarshalBinary(collaeralSe.Data)
 
-		err = verify.TDXReport(t.Context(), root, collateral, evidencePiece)
+		err = verify.TDXReport(t.Context(), root, collateral, evidencePiece, make([]byte, 64))
 		require.ErrorContains(t, err, "unable to verify message digest using quote's signature and ecdsa attestation key")
 	})
 
@@ -155,7 +155,7 @@ func Test_VerifyTDXReport_Success(t *testing.T) {
 			Signature: make([]byte, 64),
 		}
 
-		err = verify.TDXReport(t.Context(), root, *tdxCollateral, evidencePiece)
+		err = verify.TDXReport(t.Context(), root, *tdxCollateral, evidencePiece, make([]byte, 64))
 		require.ErrorContains(t, err, "quote format not supported")
 	})
 

@@ -14,6 +14,7 @@
 package verify
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -29,12 +30,20 @@ func SEVSNPReport(
 	signedEvidencePiece *evidence.SignedEvidencePiece,
 	checkRevocations bool,
 	getter trust.HTTPSGetter,
+	nonce []byte,
 ) error {
 	attestation := &spb.Attestation{}
 	err := proto.Unmarshal(signedEvidencePiece.Data, attestation)
 
 	if err != nil {
 		return fmt.Errorf("failed to parse SEV-SNP report (%v): %w", signedEvidencePiece.Data, err)
+	}
+
+	if !bytes.Equal(attestation.GetReport().ReportData, nonce) {
+		return fmt.Errorf(
+			"nonce does not match expected value: expected (%x) saw (%x)",
+			nonce,
+			attestation.GetReport().ReportData)
 	}
 
 	err = sv.SnpAttestationContext(

@@ -625,6 +625,11 @@ func (b *Base64Data) UnmarshalJSON(data []byte) error {
 type HexData []byte
 
 func (h *HexData) UnmarshalJSON(data []byte) error {
+	if data == nil {
+		*h = nil
+		return nil
+	}
+
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
@@ -689,6 +694,7 @@ func (c *AzureCVMRuntimeData) MarshalProto() *pb.AzureCVMRuntimeData {
 	message.SetConfiguration(c.AzureCVMConfiguration.MarshalProto())
 	message.SetOriginalJson(c.OriginalJSON)
 	message.SetSignature(c.Signature[:])
+	message.SetUserData(c.UserData)
 	return message
 }
 
@@ -721,7 +727,11 @@ func (c *AzureCVMRuntimeData) UnmarshalProto(runtimeDataProto *pb.AzureCVMRuntim
 
 func (c *AzureCVMConfiguration) UnmarshalProto(configProto *pb.AzureCVMConfiguration) error {
 	c.ConsoleEnabled = configProto.GetConsoleEnabled()
-	c.RootCertThumbprint = configProto.GetRootCertThumbprint()
+	if len(configProto.GetRootCertThumbprint()) > 0 {
+		c.RootCertThumbprint = configProto.GetRootCertThumbprint()
+	} else {
+		c.RootCertThumbprint = nil
+	}
 	c.SecureBoot = configProto.GetSecureBoot()
 	c.VmUniqueID = configProto.GetVmUniqueId()
 	c.TpmPersisted = configProto.GetTpmPersisted()
@@ -779,4 +789,18 @@ func (a *AzureCVMRuntimeData) UnmarshalJSON(data []byte) error {
 	aux := (*Alias)(a)
 
 	return json.Unmarshal(data, aux)
+}
+
+func PadByteArrayTo64(data []byte) ([]byte, error) {
+	if len(data) == 64 {
+		return data, nil
+	} else if len(data) > 64 {
+		return nil, errors.New("array longer than 64 bytes")
+	}
+
+	padded := make([]byte, 64)
+
+	copy(padded, data)
+
+	return padded, nil
 }

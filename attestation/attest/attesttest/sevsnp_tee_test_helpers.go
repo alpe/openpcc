@@ -43,18 +43,6 @@ import (
 
 var SVSMAttestVtpmGUID = uuid.MustParse("c476f1eb-0123-45a5-9641-b4e7dde5bfe3")
 
-var (
-	testReportData = [64]byte{
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0}
-)
-
 type MockQuoteProvider struct {
 	internalQuoteProvider *sevtest.QuoteProvider
 }
@@ -101,7 +89,7 @@ type SevSnpTestSetup struct {
 // setupSevSnpTest creates a common test environment with configurable options
 func SetupSevSnpTest(t *testing.T, cfg SevSnpTestConfig) *SevSnpTestSetup {
 	t.Helper()
-	// Create a random 64 byte nonce
+	// Create a 64 byte nonce
 	nonce := make([]byte, 64)
 	//nolint: revive
 	_, err := rand.Read(nonce)
@@ -221,7 +209,7 @@ func createMockQuoteProvider(
 	// Create raw report and sign it
 	var rawManifest []byte
 
-	reportData := testReportData
+	reportData := nonce
 	if cfg.UseExtendedReport {
 		rawManifest = createRawManifest(t, cfg)
 		if cfg.UseBadReportData {

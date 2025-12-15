@@ -16,6 +16,7 @@ package verify
 import (
 	"context"
 	"crypto/rsa"
+	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -68,6 +69,7 @@ func (v *ConfidentSecurityVerifier) VerifyComputeNode(ctx context.Context, evide
 	// Step 1: verify the Trusted Execution Environment
 	sevSnpTeeEvidence := maybeGetEvidencePieceFromList(ev.SevSnpReport, evidence)
 	tdxTeeEvidence := maybeGetEvidencePieceFromList(ev.TdxReport, evidence)
+	azureCvmRuntimeData := maybeGetEvidencePieceFromList(ev.AzureRuntimeData, evidence)
 
 	var sevSnpExtendedTeeEvidence *ev.SignedEvidencePiece
 	if sevSnpTeeEvidence == nil && tdxTeeEvidence == nil {
@@ -89,6 +91,28 @@ func (v *ConfidentSecurityVerifier) VerifyComputeNode(ctx context.Context, evide
 		return nil, fmt.Errorf("expected exactly one TEE evidence piece, got %d", teeEvidenceCount)
 	}
 
+	// The padded sha256 hash of the TPM Quote signature is used as the nonce for the TEE reports
+	tpmQuote := maybeGetEvidencePieceFromList(ev.TpmQuote, evidence)
+	if tpmQuote == nil {
+		return nil, errors.New("no tpm quote provided")
+	}
+
+	tpmQuoteHash := sha256.Sum256(tpmQuote.Signature)
+	tpmQuoteHashPadded, err := ev.PadByteArrayTo64(tpmQuoteHash[:])
+	if err != nil {
+		return nil, errors.New("quote hash was longer than 64 bytes (cannot use as nonce)")
+	}
+	var teeNonce []byte
+	if azureCvmRuntimeData != nil {
+		azureCvmNonce, err := AzureCVMRuntimeData(ctx, azureCvmRuntimeData)
+		if err != nil {
+			return nil, fmt.Errorf("failed to verify Azure CVM runtime data: %w", err)
+		}
+		teeNonce = azureCvmNonce
+	} else {
+		teeNonce = tpmQuoteHashPadded
+	}
+
 	// Only one of the above variables should be non-nil, handle each in turn
 	switch {
 	case sevSnpTeeEvidence != nil:
@@ -97,6 +121,7 @@ func (v *ConfidentSecurityVerifier) VerifyComputeNode(ctx context.Context, evide
 			sevSnpTeeEvidence,
 			false,
 			nil,
+			teeNonce,
 		)
 
 		if err != nil {
@@ -126,6 +151,7 @@ func (v *ConfidentSecurityVerifier) VerifyComputeNode(ctx context.Context, evide
 			rootCert,
 			tdxCollateral,
 			tdxTeeEvidence,
+			teeNonce,
 		)
 
 		if err != nil {
@@ -139,6 +165,7 @@ func (v *ConfidentSecurityVerifier) VerifyComputeNode(ctx context.Context, evide
 			sevSnpExtendedTeeEvidence,
 			false,
 			nil,
+			teeNonce,
 		)
 
 		if err != nil {
@@ -298,10 +325,6 @@ func (v *ConfidentSecurityVerifier) VerifyComputeNode(ctx context.Context, evide
 	}
 
 	// Step 5: Verify Quoted PCR Registers
-	tpmQuote := maybeGetEvidencePieceFromList(ev.TpmQuote, evidence)
-	if tpmQuote == nil {
-		return nil, errors.New("no tpm quote provided")
-	}
 
 	validatedPCRValues, err := TPMQuote(ctx, akPubKey, tpmQuote)
 	if err != nil {

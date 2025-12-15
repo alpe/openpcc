@@ -14,6 +14,7 @@
 package verify
 
 import (
+	"bytes"
 	"context"
 	"crypto/x509"
 	_ "embed"
@@ -27,6 +28,7 @@ import (
 	"github.com/openpcc/openpcc/attestation/evidence"
 
 	"github.com/google/go-tdx-guest/proto/checkconfig"
+	pb "github.com/google/go-tdx-guest/proto/tdx"
 )
 
 var (
@@ -83,11 +85,25 @@ func TDXReport(
 	rootCert *x509.Certificate,
 	collateral evidence.TDXCollateral,
 	signedEvidencePiece *evidence.SignedEvidencePiece,
+	nonce []byte,
 ) error {
 	report, err := abi.QuoteToProto(signedEvidencePiece.Data)
 
 	if err != nil {
 		return fmt.Errorf("failed to convert quote to proto: %w", err)
+	}
+
+	reportV4, ok := report.(*pb.QuoteV4)
+
+	if !ok {
+		return fmt.Errorf("failed to convert quote to V4 proto: %w", err)
+	}
+
+	if !bytes.Equal(reportV4.GetTdQuoteBody().ReportData, nonce) {
+		return fmt.Errorf(
+			"nonce does not match expected value: expected (%v) saw (%v)",
+			nonce,
+			reportV4.GetTdQuoteBody().ReportData)
 	}
 
 	rootOfTrust := &checkconfig.RootOfTrust{}

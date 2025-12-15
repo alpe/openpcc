@@ -15,21 +15,14 @@
 package attest
 
 import (
-	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
-	sabi "github.com/google/go-sev-guest/abi"
 	"github.com/google/go-tpm/tpm2/transport"
 	"github.com/google/go-tpm/tpmutil"
 	"github.com/openpcc/openpcc/attestation/evidence"
 	cstpm "github.com/openpcc/openpcc/tpm"
-)
-
-const (
-	// Experimentally we see 20 bytes after the TEE report, some of which are non-zero,
-	// their purpose does not seem to be documented publicly.
-	AzureReportRuntimeDataBufferSize uint32 = 20
 )
 
 type AzureCVMRuntimeDataAttestor struct {
@@ -48,13 +41,27 @@ func (*AzureCVMRuntimeDataAttestor) Name() string {
 	return "AzureCVMRuntimeDataAttestor"
 }
 
-func (a *AzureCVMRuntimeDataAttestor) CreateSignedEvidence(ctx context.Context) (*evidence.SignedEvidencePiece, error) {
-	emptyNonce := make([]byte, sabi.ReportDataSize)
+func ParseAzureCVMRuntimeDataFromReport(raw []byte) (*evidence.AzureCVMRuntimeData, error) {
+	rawJsonBytesWithHeaderTrailer := raw[(AzureSEVSNPReportOffset + AzureSEVSNPReportSize):]
+	rawJsonBytesTrimmed, err := ExtractJSONObjectWithTrailingHeadingBytes(rawJsonBytesWithHeaderTrailer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal runtime data: %w", err)
+	}
 
+	runtimeData := &evidence.AzureCVMRuntimeData{}
+
+	err = runtimeData.UnmarshalJSON(rawJsonBytesTrimmed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal runtime data: %w", err)
+	}
+	return runtimeData, nil
+}
+
+func (a *AzureCVMRuntimeDataAttestor) CreateSignedEvidence(ctx context.Context) (*evidence.SignedEvidencePiece, error) {
 	err := cstpm.WriteToNVRamNoAuth(
 		a.tpm,
 		tpmutil.Handle(AzureTDReportWriteNVIndex),
-		emptyNonce)
+		a.Nonce)
 
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -68,16 +75,10 @@ func (a *AzureCVMRuntimeDataAttestor) CreateSignedEvidence(ctx context.Context) 
 		return nil, fmt.Errorf("failed to read TD report from NV index (%x): %w", AzureTDReportReadNVIndex, err)
 	}
 
-	rawJsonBytes := raw[(AzureSEVSNPReportOffset + AzureSEVSNPReportSize + AzureReportRuntimeDataBufferSize):]
-	// There is a seemingly arbitrary number of null bytes after the runtime data, these are not included in
-	// the signature of the runtime data that ends up in the TEE report, so we drop them here.
-	rawJsonBytesTrimmed := bytes.TrimRight(rawJsonBytes, "\x00")
+	runtimeData, err := ParseAzureCVMRuntimeDataFromReport(raw)
 
-	runtimeData := &evidence.AzureCVMRuntimeData{}
-
-	err = runtimeData.UnmarshalJSON(rawJsonBytesTrimmed)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal runtime data: %w", err)
+		return nil, err
 	}
 
 	runtimeDataSerialized, err := runtimeData.MarshalBinary()
@@ -90,4 +91,38 @@ func (a *AzureCVMRuntimeDataAttestor) CreateSignedEvidence(ctx context.Context) 
 		Signature: runtimeData.Signature[:],
 		Type:      evidence.AzureRuntimeData,
 	}, nil
+}
+
+// The exact offsets of the json runtime information in the raw binary output from the vTPM are not defined.
+// Given that fact that its a variable length structure we will use this streaming json parser to extract it.
+func ExtractJSONObjectWithTrailingHeadingBytes(data []byte) ([]byte, error) {
+	firstBrace := -1
+	for i := 0; i < len(data); i++ {
+		if data[i] == '{' {
+			firstBrace = i
+			break
+		}
+	}
+
+	if firstBrace == -1 {
+		return nil, errors.New("no JSON object found in data")
+	}
+
+	lastBrace := -1
+	for i := len(data) - 1; i >= 0; i-- {
+		if data[i] == '}' {
+			lastBrace = i
+			break
+		}
+	}
+
+	if lastBrace == -1 {
+		return nil, errors.New("no JSON object found in data")
+	}
+
+	if lastBrace < firstBrace {
+		return nil, errors.New("no JSON object found in data")
+	}
+
+	return data[firstBrace : lastBrace+1], nil
 }

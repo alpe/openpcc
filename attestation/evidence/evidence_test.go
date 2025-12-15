@@ -113,7 +113,7 @@ func TestAzureCVMRuntimeDataSerDe(t *testing.T) {
 	nVal, err := base64.RawURLEncoding.DecodeString("rAip")
 	require.NoError(t, err)
 
-	validJson := `{"keys":[{"kid":"HCLAkPub","key_ops":["sign"],"kty":"RSA","e":"AQAB","n":"rAip"}],"vm-configuration":{"root-cert-thumbprint":"AQAB","console-enabled":true,"secure-boot":true,"tpm-enabled":true,"tpm-persisted":true,"vmUniqueId":"68dc0ac0-2ed9-4b2a-a03e-4953e416d939"},"user-data":"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}`
+	validJson := `{"keys":[{"kid":"HCLAkPub","key_ops":["sign"],"kty":"RSA","e":"AQAB","n":"rAip"}],"vm-configuration":{"root-cert-thumbprint":"AQAB","console-enabled":true,"secure-boot":true,"tpm-enabled":true,"tpm-persisted":true,"vmUniqueId":"68dc0ac0-2ed9-4b2a-a03e-4953e416d939"},"user-data":"dead"}`
 
 	tests := []struct {
 		name    string
@@ -126,7 +126,7 @@ func TestAzureCVMRuntimeDataSerDe(t *testing.T) {
 			want: &AzureCVMRuntimeData{
 				OriginalJSON: []byte(validJson),
 				Signature:    sha256.Sum256([]byte(validJson)),
-				UserData:     make([]byte, 64),
+				UserData:     []byte{0xde, 0xad},
 				Keys: []*AzureCVMKey{
 					{
 						E:      eVal,
@@ -163,6 +163,62 @@ func TestAzureCVMRuntimeDataSerDe(t *testing.T) {
 			roundTrip.UnmarshalProto(proto)
 
 			require.Truef(t, reflect.DeepEqual(roundTrip, tt.want), "diff between proto round trip object and expected: %v", cmp.Diff(roundTrip, tt.want))
+		})
+	}
+}
+
+func Test_PadByteArrayTo64(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     []byte
+		want      []byte
+		expectErr bool
+	}{
+		{
+			name:      "64 empty bytes",
+			input:     make([]byte, 64),
+			want:      make([]byte, 64),
+			expectErr: false,
+		},
+		{
+			name:      "32 empty bytes",
+			input:     make([]byte, 32),
+			want:      make([]byte, 64),
+			expectErr: false,
+		},
+		{
+			name:      "longer than 64",
+			input:     make([]byte, 128),
+			want:      nil,
+			expectErr: true,
+		},
+		{
+			name:  "nonzero content",
+			input: []byte{'1', '2', '3', '4'},
+			want: []byte{'1', '2', '3', '4',
+				0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0},
+			expectErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			padded, err := PadByteArrayTo64(tt.input)
+			if (err != nil) != tt.expectErr {
+				t.Errorf("PadByteArrayTo64() error = %v, expectErr %v", err, tt.expectErr)
+				return
+			}
+
+			if !bytes.Equal(padded, tt.want) {
+				t.Errorf("PadByteArrayTo64() got = %s, want %s", padded, tt.want)
+			}
 		})
 	}
 }

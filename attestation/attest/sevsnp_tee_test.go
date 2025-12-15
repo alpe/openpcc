@@ -43,7 +43,7 @@ func Test_VerifySEVSNPReport_Success(t *testing.T) {
 	setup := attesttest.SetupSevSnpTest(t, attesttest.SevSnpTestConfig{})
 	evidence := setupAttestor(t, setup)
 
-	err := verify.SEVSNPReport(t.Context(), evidence, true, setup.Getter)
+	err := verify.SEVSNPReport(t.Context(), evidence, true, setup.Getter, setup.Nonce)
 	require.NoError(t, err)
 }
 
@@ -52,7 +52,7 @@ func Test_VerifySEVSNPReport_FailureArkRevoked(t *testing.T) {
 	setup := attesttest.SetupSevSnpTest(t, attesttest.SevSnpTestConfig{ArkRevoked: true})
 	evidence := setupAttestor(t, setup)
 
-	err := verify.SEVSNPReport(t.Context(), evidence, true, setup.Getter)
+	err := verify.SEVSNPReport(t.Context(), evidence, true, setup.Getter, setup.Nonce)
 	require.Error(t, err, "should fail when ARK is revoked")
 }
 
@@ -61,7 +61,7 @@ func Test_VerifySEVSNPReport_FailureAskRevoked(t *testing.T) {
 	setup := attesttest.SetupSevSnpTest(t, attesttest.SevSnpTestConfig{AskRevoked: true})
 	evidence := setupAttestor(t, setup)
 
-	err := verify.SEVSNPReport(t.Context(), evidence, true, setup.Getter)
+	err := verify.SEVSNPReport(t.Context(), evidence, true, setup.Getter, setup.Nonce)
 	require.Error(t, err, "should fail when ASK is revoked")
 }
 
@@ -70,6 +70,6 @@ func Test_VerifySEVSNPReport_FailureSignerRootMismatch(t *testing.T) {
 	setup := attesttest.SetupSevSnpTest(t, attesttest.SevSnpTestConfig{UseMismatchedVcekKey: true})
 	evidence := setupAttestor(t, setup)
 
-	err := verify.SEVSNPReport(t.Context(), evidence, true, setup.Getter)
+	err := verify.SEVSNPReport(t.Context(), evidence, true, setup.Getter, setup.Nonce)
 	require.Error(t, err, "should fail with signer root mismatch")
 }

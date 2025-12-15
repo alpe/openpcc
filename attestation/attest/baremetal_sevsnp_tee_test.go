@@ -89,7 +89,7 @@ func Test_VerifyBareMetalSEVSNPReport_Success(t *testing.T) {
 
 	tpmtEvidence := setupTpmtEvidence(t, thetpm)
 
-	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter)
+	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter, setup.Nonce)
 	require.NoError(t, err)
 
 	akPub, err := verify.BareMetalSEVSNPAKPub(t.Context(), evidence, tpmtEvidence)
@@ -115,7 +115,7 @@ func Test_VerifyBareMetalSEVSNPReport_FailureBadReportData(t *testing.T) {
 		TPM:               thetpm})
 	evidence := setupBareMetalTEEEvidence(t, setup)
 
-	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter)
+	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter, setup.Nonce)
 	require.Error(t, err, "should fail with bad report data")
 }
 
@@ -139,7 +139,7 @@ func Test_VerifyBareMetalSEVSNPReport_FailureBadAK(t *testing.T) {
 
 	tpmtEvidence := setupTpmtEvidence(t, thetpm)
 
-	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter)
+	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter, setup.Nonce)
 	require.NoError(t, err)
 
 	_, err = verify.BareMetalSEVSNPAKPub(t.Context(), evidence, tpmtEvidence)
@@ -164,7 +164,7 @@ func Test_VerifyBareMetalSEVSNPReport_FailureArkRevoked(t *testing.T) {
 		TPM:               thetpm})
 	evidence := setupBareMetalTEEEvidence(t, setup)
 
-	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter)
+	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter, setup.Nonce)
 	require.Error(t, err, "should fail when ARK is revoked")
 }
 
@@ -186,7 +186,7 @@ func Test_VerifyBareMetalSEVSNPReport_FailureAskRevoked(t *testing.T) {
 		TPM:               thetpm})
 	evidence := setupBareMetalTEEEvidence(t, setup)
 
-	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter)
+	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter, setup.Nonce)
 	require.Error(t, err, "should fail when ASK is revoked")
 }
 
@@ -208,6 +208,6 @@ func Test_VerifyBareMetalSEVSNPReport_FailureSignerRootMismatch(t *testing.T) {
 		TPM:                  thetpm})
 	evidence := setupBareMetalTEEEvidence(t, setup)
 
-	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter)
+	err = verify.BareMetalSEVSNPReport(t.Context(), evidence, true, setup.Getter, setup.Nonce)
 	require.Error(t, err, "should fail with signer root mismatch")
 }
